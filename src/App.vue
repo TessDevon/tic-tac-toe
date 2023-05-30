@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue';
+import Play from './components/Play.vue';
 import Start from './components/Start.vue';
 </script>
 
 <template>
 
-<Start></Start>
+<Play></Play>
+
 
 </template>
 
