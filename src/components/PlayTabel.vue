@@ -14,10 +14,15 @@ interface ShowPlayPlanProps {
 
 const props = defineProps<ShowPlayPlanProps>();
 
+defineEmits<{ (e:"changeValueInplaySquare", id:number): void }>();
+
 </script>
 
 <template>
-    <div class="playPart">
+    <div 
+    @click.once="() => $emit('changeValueInplaySquare', props.playSquare.id)"
+    class="playPart"
+    >
     {{ props.playSquare.symbol }}
     </div>
 </template>
