@@ -26,4 +26,16 @@ const handleSubmit = () => {
   
 </template>
 
-<style scoped></style>
+<style scoped>
+  button {
+    border: 2px solid black;
+    border-radius: 10px;
+    margin:10px
+  }
+  button:hover{
+    background-color: lightgray;
+  }
+  input{
+    font-size: 1.3rem;
+  }
+</style>
