@@ -9,18 +9,27 @@ import StartNewGameBtn from "./StartNewGameBtn.vue";
 import { PlaySquare } from "../Models/IGameTabel";
 import { Player } from "../Models/IPlayer";
 
-const playerX = ref(new Player("", "X"));
-const playerO = ref(new Player("", "O"));
+//Add and handle Players
+let playerX = ref(new Player("", "X"));
+let playerO = ref(new Player("", "O"));
 
 const addPlayers = (texts: string[]) => {
-  console.log(texts);
-  playerO.value.name = texts[0];
-  playerX.value.name = texts[1];
+  //Kolla av om spelarna redan finns i localstorage:
+  const activePlayers = localStorage.getItem("Players");
+  const checkActivePlayers = activePlayers ? JSON.parse(activePlayers) : null;
 
-  localStorage.setItem(
-    "Players",
-    JSON.stringify({ playerO: playerO.value, playerX: playerX.value })
-  );
+  if (checkActivePlayers != null) {
+    playerO.value.name = checkActivePlayers.name[0];
+    playerX.value.name = checkActivePlayers.name[1];
+  } else {
+    //  console.log(texts);
+    playerO.value.name = texts[0];
+    playerX.value.name = texts[1];
+    localStorage.setItem(
+      "Players",
+      JSON.stringify({ playerO: playerO.value, playerX: playerX.value })
+    );
+  }
 };
 
 //Add and handle PlayArea
@@ -39,35 +48,104 @@ const GameTabelPlan = [
 ];
 
 onMounted(() => {
+  //Kallas när sidan laddas om sidan.
   let SavedPlay = JSON.parse(localStorage.getItem("SavedPlay") || "[]");
   if (SavedPlay.length == 0) {
     playSquares.value = GameTabelPlan;
   } else {
     playSquares.value = SavedPlay;
   }
+  //Kollar i localStorage om aktiv användare finns.
+  let SavedActivePlayer = JSON.parse(
+    localStorage.getItem("SavedActivePlayer") || "[]"
+  );
+
+  if (SavedActivePlayer !== "") {
+    activePlayer.value.ID = SavedActivePlayer;
+  }
 });
+
 let activePlayer = ref<Player>(playerO.value);
 
+//Ändra värde i rutan.
+
+let gameIsOver = false;
+
 const changeValueInplaySquare = (id: number) => {
+  if (gameIsOver) {
+    return;
+  }
+
   playSquares.value = playSquares.value.map((playSquare) => {
     if (playSquare.id === id) {
       playSquare.symbol = activePlayer.value.ID;
     }
     return playSquare;
   });
+
+  localStorage.setItem("SavedPlay", JSON.stringify(playSquares.value)); //Spara draget i varje drag.
+
+  checkForWinner();
   let players = JSON.parse(localStorage.getItem("Players") || "[]");
   if (activePlayer.value.ID === players.playerO.ID) {
-    activePlayer.value = players.playerX;
+    activePlayer.value = players.playerX; //Växla spelare
   } else {
     activePlayer.value = players.playerO;
   }
+  playInfo.value = `Det är ${activePlayer.value.name} tur!`;
+
+  localStorage.setItem(
+    "SavedActivePlayer",
+    JSON.stringify(activePlayer.value.ID)
+  );
 };
+
+const checkForWinner = () => {
+  const winningOpportunities = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6],
+  ];
+
+  for (let winningOpportunity of winningOpportunities) {
+    const [position1, position2, position3] = winningOpportunity;
+
+    if (
+      playSquares.value[position1].symbol !== "" &&
+      playSquares.value[position1].symbol ===
+        playSquares.value[position2].symbol &&
+      playSquares.value[position1].symbol ===
+        playSquares.value[position3].symbol
+    ) {
+      gameIsOver = true;
+      playInfo.value = `Grattis ${activePlayer.value.name}! Du vann!`;
+      return;
+    }
+  }
+
+  const holePlanFull = GameTabelPlan.every((square) => square.symbol !== "");
+
+  if (holePlanFull) {
+    gameIsOver = true;
+    playInfo.value = `Ingen vann, oavgjort!`;
+    return;
+  }
+
+  return;
+};
+
+let playInfo = ref("");
 </script>
 
 <template>
   <Start @addPlayers="addPlayers"></Start>
   <Header></Header>
-  <p>Det är {{ activePlayer.name }} tur!</p>
+  <p>{{ playInfo }}</p>
   <div class="playContainer">
     <PlayTabel
       class="playPart"
