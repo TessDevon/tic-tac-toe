@@ -1,7 +1,15 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+
+const emits = defineEmits<{ (e: "restartWithNewPlayers"): void }> ();
+
+const handleStartGameFromStart = () => {
+    emits ("restartWithNewPlayers");
+}
+
+</script>
 
 <template>
-    <button>Starta från början</button>
+    <button @click="handleStartGameFromStart">Starta från början</button>
 </template>
 
 <style scoped>

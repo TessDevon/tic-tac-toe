@@ -1,7 +1,20 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+
+import { ref } from "vue";
+
+import { PlaySquare } from '../Models/IGameTabel';
+
+
+const emits = defineEmits<{ (e: "restartNewGame"): void }>();
+
+const handleNewGameBtn = () => {
+    emits ("restartNewGame");
+};
+
+</script>
 
 <template>
-    <button>Starta nytt spel</button>
+    <button @click="handleNewGameBtn">Starta nytt spel</button>
 </template>
 
 <style scoped>

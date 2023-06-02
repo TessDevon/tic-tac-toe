@@ -140,6 +140,28 @@ const checkForWinner = () => {
 };
 
 let playInfo = ref("");
+
+//Start new game
+const restartNewGame = () => {
+  playSquares.value = GameTabelPlan; 
+  localStorage.setItem("SavedPlay", JSON.stringify(playSquares.value));
+  location.reload();
+  console.log(playSquares);
+}
+
+// Restart game from beginnig 
+
+const restartWithNewPlayers = () => {
+  playSquares.value = GameTabelPlan;
+  localStorage.setItem("SavedPlay", JSON.stringify(playSquares.value));
+  playerX.value.name = "";
+  playerO.value.name = ""; 
+  localStorage.setItem("Players", JSON.stringify(playerO.value.name, playerX.value.name));
+  //Även resultatet måste tas bort från LS om ngn användare har samma namn så dennes poäng inte kommer med i nästa nya spel...??
+  
+  location.reload();
+}
+
 </script>
 
 <template>
@@ -156,7 +178,7 @@ let playInfo = ref("");
   </div>
   <PointBtn></PointBtn>
   <StartFromOBtn></StartFromOBtn>
-  <StartNewGameBtn></StartNewGameBtn>
+  <StartNewGameBtn @restartNewGame="restartNewGame"></StartNewGameBtn>
 </template>
 
 <style scoped>
