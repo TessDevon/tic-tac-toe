@@ -9,27 +9,21 @@ import StartNewGameBtn from "./StartNewGameBtn.vue";
 import { PlaySquare } from "../Models/IGameTabel";
 import { Player } from "../Models/IPlayer";
 
+let noUser = ref(true);
+
 //Add and handle Players
 let playerX = ref(new Player("", "X"));
 let playerO = ref(new Player("", "O"));
 
 const addPlayers = (texts: string[]) => {
-  //Kolla av om spelarna redan finns i localstorage:
-  const activePlayers = localStorage.getItem("Players");
-  const checkActivePlayers = activePlayers ? JSON.parse(activePlayers) : null;
-
-  if (checkActivePlayers != null) {
-    playerO.value.name = checkActivePlayers.name[0];
-    playerX.value.name = checkActivePlayers.name[1];
-  } else {
-    //  console.log(texts);
-    playerO.value.name = texts[0];
-    playerX.value.name = texts[1];
-    localStorage.setItem(
-      "Players",
-      JSON.stringify({ playerO: playerO.value, playerX: playerX.value })
-    );
-  }
+  playerO.value.name = texts[0];
+  playerX.value.name = texts[1];
+  localStorage.setItem(
+    "Players",
+    JSON.stringify({ playerO: playerO.value, playerX: playerX.value })
+  );
+  noUser.value = false;
+  playInfo.value = `Det är ${activePlayer.value.name} tur!`;
 };
 
 //Add and handle PlayArea
@@ -48,18 +42,29 @@ const GameTabelPlan = [
 ];
 
 onMounted(() => {
-  //Kallas när sidan laddas om sidan.
+  // Show game tableplan
   let SavedPlay = JSON.parse(localStorage.getItem("SavedPlay") || "[]");
   if (SavedPlay.length == 0) {
     playSquares.value = GameTabelPlan;
   } else {
     playSquares.value = SavedPlay;
   }
-  //Kollar i localStorage om aktiv användare finns.
-  let SavedActivePlayer = JSON.parse(
-    localStorage.getItem("SavedActivePlayer") || "[]"
-  );
 
+  //Search for players in LS.
+  const activePlayers = localStorage.getItem("Players");
+  const checkActivePlayers = activePlayers ? JSON.parse(activePlayers) : null;
+
+  if (checkActivePlayers != null) {
+    playerO.value.name = checkActivePlayers.playerO.name;
+    playerX.value.name = checkActivePlayers.playerX.name;
+    noUser.value = false;
+    playInfo.value = `Det är ${activePlayer.value.name} tur!`;
+  }
+
+  //Search for active plyer in LS
+  let SavedActivePlayer = JSON.parse(
+    localStorage.getItem("SavedActivePlayer") || "O"
+  );
   if (SavedActivePlayer !== "") {
     activePlayer.value.ID = SavedActivePlayer;
   }
@@ -67,8 +72,7 @@ onMounted(() => {
 
 let activePlayer = ref<Player>(playerO.value);
 
-//Ändra värde i rutan.
-
+//Change the value in the squares
 let gameIsOver = false;
 
 const changeValueInplaySquare = (id: number) => {
@@ -86,6 +90,17 @@ const changeValueInplaySquare = (id: number) => {
   localStorage.setItem("SavedPlay", JSON.stringify(playSquares.value)); //Spara draget i varje drag.
 
   checkForWinner();
+
+  if (gameIsOver) {
+    const holePlanFull = GameTabelPlan.every((square) => square.symbol !== "");
+    if (holePlanFull) {
+      playInfo.value = `Ingen vann, oavgjort!`;
+    } else {
+      playInfo.value = `Grattis ${activePlayer.value.name}! Du vann!`;
+    }
+    return;
+  }
+
   let players = JSON.parse(localStorage.getItem("Players") || "[]");
   if (activePlayer.value.ID === players.playerO.ID) {
     activePlayer.value = players.playerX; //Växla spelare
@@ -135,7 +150,6 @@ const checkForWinner = () => {
     playInfo.value = `Ingen vann, oavgjort!`;
     return;
   }
-
   return;
 };
 
@@ -143,42 +157,40 @@ let playInfo = ref("");
 
 //Start new game
 const restartNewGame = () => {
-  playSquares.value = GameTabelPlan; 
-  localStorage.setItem("SavedPlay", JSON.stringify(playSquares.value));
+  localStorage.removeItem("SavedPlay");
+  localStorage.removeItem("SavedActivePlayer");
   location.reload();
-  console.log(playSquares);
-}
+};
 
-// Restart game from beginnig 
-
+// Restart game from beginnig
 const restartWithNewPlayers = () => {
-  playSquares.value = GameTabelPlan;
-  localStorage.setItem("SavedPlay", JSON.stringify(playSquares.value));
-  playerX.value.name = "";
-  playerO.value.name = ""; 
-  localStorage.setItem("Players", JSON.stringify(playerO.value.name, playerX.value.name));
-  //Även resultatet måste tas bort från LS om ngn användare har samma namn så dennes poäng inte kommer med i nästa nya spel...??
-  
+  localStorage.removeItem("SavedPlay");
+  localStorage.removeItem("Players");
+  localStorage.removeItem("SavedActivePlayer");
+  //localStorage.removeItem("SavedResult"); Även resultatet måste tas bort från LS om ngn användare har samma namn så dennes poäng inte kommer med i nästa nya spel...??
   location.reload();
-}
-
+};
 </script>
 
 <template>
-  <Start @addPlayers="addPlayers"></Start>
   <Header></Header>
-  <p>{{ playInfo }}</p>
-  <div class="playContainer">
-    <PlayTabel
-      class="playPart"
-      @changeValueInplaySquare="changeValueInplaySquare"
-      v-for="playSquare in playSquares"
-      :playSquare="playSquare"
-    />
-  </div>
-  <PointBtn></PointBtn>
-  <StartFromOBtn></StartFromOBtn>
-  <StartNewGameBtn @restartNewGame="restartNewGame"></StartNewGameBtn>
+  <Start @addPlayers="addPlayers" v-if="noUser"></Start>
+  <template v-else>
+    <p class="playInfo">{{ playInfo }}</p>
+    <div class="playContainer">
+      <PlayTabel
+        class="playPart"
+        @changeValueInplaySquare="changeValueInplaySquare"
+        v-for="playSquare in playSquares"
+        :playSquare="playSquare"
+      />
+    </div>
+    <PointBtn></PointBtn>
+    <StartFromOBtn
+      @restartWithNewPlayers="restartWithNewPlayers"
+    ></StartFromOBtn>
+    <StartNewGameBtn @restartNewGame="restartNewGame"></StartNewGameBtn>
+  </template>
 </template>
 
 <style scoped>
@@ -191,5 +203,10 @@ const restartWithNewPlayers = () => {
   justify-items: center;
   align-items: center;
   border-radius: 7px;
+}
+
+.playInfo{
+  font-size: 2rem;
+  color: blue;
 }
 </style>

@@ -18,8 +18,8 @@ const handleSubmit = () => {
   <h2>Registrera spelare</h2>
   <div>
     <form @submit.prevent="handleSubmit">
-      <input placeholder="Player O" type="text" v-model="userInputO" id="O" />
-      <input placeholder="Player X" type="text" v-model="userInputX" id="X" />
+      <input required placeholder="Player O" type="text" v-model="userInputO" id="O" />
+      <input required placeholder="Player X" type="text" v-model="userInputX" id="X" />
       <button>Spela</button>
     </form>
   </div>
