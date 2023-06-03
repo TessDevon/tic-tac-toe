@@ -6,14 +6,18 @@ import Header from "./Header.vue";
 import PointBtn from "./PointBtn.vue";
 import StartFromOBtn from "./StartFromOBtn.vue";
 import StartNewGameBtn from "./StartNewGameBtn.vue";
-import { PlaySquare } from "../Models/IGameTabel";
-import { Player } from "../Models/IPlayer";
+import ShowResult from "./ShowResult.vue";
+import { PlaySquare } from "../Models/GameTabel";
+import { Player } from "../Models/Player";
+import { PlayerResult } from "../Models/GameResult";
 
 let noUser = ref(true);
 
 //Add and handle Players
 let playerX = ref(new Player("", "X"));
 let playerO = ref(new Player("", "O"));
+let ResultPlayerO = ref(new PlayerResult("", 0));
+let ResultPlayerX = ref(new PlayerResult("", 0));
 
 const addPlayers = (texts: string[]) => {
   playerO.value.name = texts[0];
@@ -21,6 +25,13 @@ const addPlayers = (texts: string[]) => {
   localStorage.setItem(
     "Players",
     JSON.stringify({ playerO: playerO.value, playerX: playerX.value })
+  );
+
+  ResultPlayerO.value.name = texts[0];
+  ResultPlayerX.value.name = texts[1];
+  localStorage.setItem(
+    "PlayersResult",
+    JSON.stringify([ResultPlayerO.value, ResultPlayerX.value])
   );
   noUser.value = false;
   playInfo.value = `Det är ${activePlayer.value.name} tur!`;
@@ -48,6 +59,7 @@ onMounted(() => {
     playSquares.value = GameTabelPlan;
   } else {
     playSquares.value = SavedPlay;
+    checkForWinner();
   }
 
   //Search for players in LS.
@@ -92,11 +104,25 @@ const changeValueInplaySquare = (id: number) => {
   checkForWinner();
 
   if (gameIsOver) {
-    const holePlanFull = GameTabelPlan.every((square) => square.symbol !== "");
-    if (holePlanFull) {
+    if (!checkForWinnerCalculation()) {
       playInfo.value = `Ingen vann, oavgjort!`;
     } else {
       playInfo.value = `Grattis ${activePlayer.value.name}! Du vann!`;
+      let getPlayerToAddPoint = JSON.parse(
+        localStorage.getItem("PlayersResult") || "[]"
+      );
+      getPlayerToAddPoint = getPlayerToAddPoint.map(
+        (AddPointToPlayer: PlayerResult) => {
+          if (AddPointToPlayer.name === activePlayer.value.name) {
+            AddPointToPlayer.points += 1;
+          }
+          return AddPointToPlayer;
+        }
+      );
+      localStorage.setItem(
+        "PlayersResult",
+        JSON.stringify(getPlayerToAddPoint)
+      );
     }
     return;
   }
@@ -116,6 +142,11 @@ const changeValueInplaySquare = (id: number) => {
 };
 
 const checkForWinner = () => {
+  checkForWinnerCalculation();
+  checkForEqualGame();
+};
+
+const checkForWinnerCalculation = () => {
   const winningOpportunities = [
     [0, 1, 2],
     [3, 4, 5],
@@ -138,19 +169,20 @@ const checkForWinner = () => {
         playSquares.value[position3].symbol
     ) {
       gameIsOver = true;
-      playInfo.value = `Grattis ${activePlayer.value.name}! Du vann!`;
-      return;
+      return true;
     }
   }
+  return false;
+};
 
+const checkForEqualGame = () => {
   const holePlanFull = GameTabelPlan.every((square) => square.symbol !== "");
 
   if (holePlanFull) {
     gameIsOver = true;
-    playInfo.value = `Ingen vann, oavgjort!`;
-    return;
+    return true;
   }
-  return;
+  return false;
 };
 
 let playInfo = ref("");
@@ -167,8 +199,39 @@ const restartWithNewPlayers = () => {
   localStorage.removeItem("SavedPlay");
   localStorage.removeItem("Players");
   localStorage.removeItem("SavedActivePlayer");
-  //localStorage.removeItem("SavedResult"); Även resultatet måste tas bort från LS om ngn användare har samma namn så dennes poäng inte kommer med i nästa nya spel...??
+  localStorage.removeItem("PlayersResult");
+  localStorage.removeItem("SavedResult");
   location.reload();
+};
+
+//Show Result
+let name1 = ref("");
+let name2 = ref("");
+let point1 = ref("");
+let point2 = ref("");
+let showResultDiv = ref(false);
+
+const showResult = () => {
+  console.log("hej");
+  let showResultPlayers = JSON.parse(
+    localStorage.getItem("PlayersResult") || "[]"
+  );
+  console.log(showResultPlayers);
+
+  showResultDiv.value = true;
+
+  let nameplayer1 = showResultPlayers[0].name;
+  let nameplayer2 = showResultPlayers[1].name;
+  let pointplayer1 = showResultPlayers[0].points;
+  let pointplayer2 = showResultPlayers[1].points;
+
+  name1.value = `${nameplayer1} har  `;
+  name2.value = `${nameplayer2} har  `;
+  point1.value = `${pointplayer1} poäng`;
+  point2.value = `${pointplayer2} poäng`;
+};
+const closeResult = () => {
+  showResultDiv.value = false;
 };
 </script>
 
@@ -185,12 +248,22 @@ const restartWithNewPlayers = () => {
         :playSquare="playSquare"
       />
     </div>
-    <PointBtn></PointBtn>
+    <PointBtn @showResult="showResult"></PointBtn>
     <StartFromOBtn
       @restartWithNewPlayers="restartWithNewPlayers"
     ></StartFromOBtn>
     <StartNewGameBtn @restartNewGame="restartNewGame"></StartNewGameBtn>
   </template>
+  <div class="showResultDiv" v-if="showResultDiv">
+    <h2 class="resultText">Poängställning</h2>
+    <span class="resultInfo">{{ name1 }}</span>
+    <span class="resultInfo">{{ point1 }}</span> <br />
+    <br />
+    <span class="resultInfo">{{ name2 }}</span>
+    <span class="resultInfo">{{ point2 }}</span> <br />
+    <br />
+    <button class="closeResultBtn" @click="closeResult">X</button>
+  </div>
 </template>
 
 <style scoped>
@@ -205,8 +278,37 @@ const restartWithNewPlayers = () => {
   border-radius: 7px;
 }
 
-.playInfo{
+.playInfo {
   font-size: 2rem;
   color: blue;
+}
+.showResultDiv {
+  position: relative;
+  top: -900px;
+  left: -380px;
+  width: 100vw;
+  height: 130vh;
+  background-color: rgb(23, 11, 154);
+  color: white;
+}
+
+.resultText {
+  padding-top: 20rem;
+  font-size: xx-large;
+}
+
+.resultInfo {
+  font-size: xx-large;
+  margin-top: 10px;
+}
+
+.closeResultBtn {
+  border: 2px solid black;
+  border-radius: 10px;
+  margin: 10px;
+}
+
+.closeResultBtn:hover {
+  background-color: lightgray;
 }
 </style>

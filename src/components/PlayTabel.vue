@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { PlaySquare } from "../Models/IGameTabel";
+import { PlaySquare } from "../Models/GameTabel";
 //import { ShowPlayPlan} from "../components/Play.vue"
 //import { props } from 'vue';
 //import { GameTabel } from '../Models/IGameTabel';

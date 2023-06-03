@@ -2,7 +2,7 @@
 
 import { ref } from "vue";
 
-import { PlaySquare } from '../Models/IGameTabel';
+import { PlaySquare } from '../Models/GameTabel';
 
 
 const emits = defineEmits<{ (e: "restartNewGame"): void }>();

@@ -1,7 +1,15 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+
+const emits = defineEmits<{ (e: "showResult"): void}> ();
+
+const handleShowResult = () => {
+    emits ("showResult");
+}
+
+</script>
 
 <template>
-    <button>Visa poäng</button>
+    <button @click="handleShowResult">Visa poäng</button>
 </template>
 
 <style scoped>
