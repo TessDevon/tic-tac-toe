@@ -1,11 +1,5 @@
 <script setup lang="ts">
 import { PlaySquare } from "../Models/GameTabel";
-//import { ShowPlayPlan} from "../components/Play.vue"
-//import { props } from 'vue';
-//import { GameTabel } from '../Models/IGameTabel';
-
-/*const GameTabelPlan = [{symbol:"", id:0 },{symbol:"", id:1},{symbol:"", id:2},{symbol:"", id:3},{symbol:"", id:4},{symbol:"", id:5},{symbol:"", id:6},{symbol:"", id:7},{symbol:"", id:8}];
-console.log(GameTabelPlan);*/
 
 interface ShowPlayPlanProps {
   playSquare: PlaySquare;
@@ -30,7 +24,7 @@ defineEmits<{ (e: "changeValueInplaySquare", id: number): void }>();
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 150px; /*Större storlek när jag inte längre vill se all info i blocken.*/
+  font-size: 150px;
   height: 100%;
   width: 100%;
   border: 3px solid black;

@@ -6,8 +6,6 @@ import Header from "./Header.vue";
 import PointBtn from "./PointBtn.vue";
 import StartFromOBtn from "./StartFromOBtn.vue";
 import StartNewGameBtn from "./StartNewGameBtn.vue";
-import ShowResult from "./ShowResult.vue";
-import { PlaySquare } from "../Models/GameTabel";
 import { Player } from "../Models/Player";
 import { PlayerResult } from "../Models/GameResult";
 
@@ -212,11 +210,9 @@ let point2 = ref("");
 let showResultDiv = ref(false);
 
 const showResult = () => {
-  console.log("hej");
   let showResultPlayers = JSON.parse(
     localStorage.getItem("PlayersResult") || "[]"
   );
-  console.log(showResultPlayers);
 
   showResultDiv.value = true;
 

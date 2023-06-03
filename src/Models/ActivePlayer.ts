@@ -1,3 +1,3 @@
 export class activePlayer {
-    constructor(public symbol: string) {}
-  }
+  constructor(public symbol: string) {}
+}
